@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数心解読 - Mind Reader -</title>
+  <style>
+    :root {
+      --bg-color: #0d0f17;
+      --panel-bg: #161b26;
+      --primary: #a4c2f4;
+      --secondary: #ff85a1;
+      --accent: #b5838d;
+      --text: #e0f7fa;
+      --text-dim: #7a92a5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Consolas', 'Courier New', monospace, 'Segoe UI', serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 50% 50%, rgba(181, 131, 141, 0.1) 0%, transparent 80%),
+        linear-gradient(rgba(164, 194, 244, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(164, 194, 244, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 30px 30px, 30px 30px;
+    }
+
+    .app-layout {
+      max-width: 550px;
+      width: 100%;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* タイトル表示 */
+    .app-header {
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .main-title {
+      font-size: 1.8rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: var(--primary);
+      text-shadow: 0 0 12px rgba(164, 194, 244, 0.5);
+      background: linear-gradient(135deg, #e0f7fa, #a4c2f4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .sub-title {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      letter-spacing: 3px;
+      margin-top: 3px;
+    }
+
+    .main-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--primary);
+      box-shadow: 0 0 20px rgba(164, 194, 244, 0.2);
+      border-radius: 12px;
+      padding: 25px 20px 15px 20px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .main-panel::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      animation: scan 3s linear infinite;
+    }
+
+    @keyframes scan {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    /* キャラクターと会話ウィンドウエリア */
+    .talk-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      background: rgba(13, 15, 23, 0.8);
+      border: 1px solid rgba(164, 194, 244, 0.3);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .character-avatar {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 10px rgba(164, 194, 244, 0.4);
+      flex-shrink: 0;
+      animation: floatAvatar 3s ease-in-out infinite;
+    }
+
+    @keyframes floatAvatar {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    /* メッセージウィンドウ（2段固定表示エリア） */
+    .dialogue-box {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-height: 64px;
+    }
+
+    .dialogue-text {
+      font-size: 0.9rem;
+      color: #fff;
+      line-height: 1.5;
+      word-break: break-all;
+    }
+
+    .cursor {
+      display: inline-block;
+      width: 6px;
+      height: 14px;
+      background-color: var(--primary);
+      margin-left: 2px;
+      vertical-align: middle;
+      animation: blink 0.8s infinite;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    /* 3D フリップカード */
+    .flip-container {
+      perspective: 1000px;
+      margin-bottom: 15px;
+    }
+
+    .flip-card {
+      width: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .flip-card.flipped {
+      transform: rotateY(180deg);
+    }
+
+    .flip-face {
+      width: 100%;
+      backface-visibility: hidden;
+      background: rgba(13, 15, 23, 0.95);
+      border: 1px solid rgba(164, 194, 244, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    }
+
+    .flip-front {
+      position: relative;
+      z-index: 2;
+    }
+
+    .flip-back {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      transform: rotateY(180deg);
+      z-index: 1;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+      gap: 5px;
+    }
+
+    .card-num {
+      background: rgba(164, 194, 244, 0.08);
+      border: 1px solid rgba(164, 194, 244, 0.2);
+      color: var(--text);
+      padding: 4px 0;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .binary-status {
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: var(--primary);
+      background: rgba(164, 194, 244, 0.08);
+      border: 1px solid var(--primary);
+      padding: 6px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    .btn {
+      background: transparent;
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 10px 24px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--primary);
+      color: var(--bg-color);
+      box-shadow: 0 0 12px var(--primary);
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-no {
+      border-color: var(--secondary);
+      color: var(--secondary);
+    }
+
+    .btn-no:hover {
+      background: var(--secondary);
+      color: #fff;
+      box-shadow: 0 0 12px var(--secondary);
+    }
+
+    /* 診断中画面 */
+    .analyzing-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 0;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(164, 194, 244, 0.1);
+      border-top: 3px solid var(--primary);
+      border-right: 3px solid var(--secondary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .progress-bar {
+      width: 200px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--secondary), var(--primary));
+      transition: width 2.5s ease-in-out;
+    }
+
+    /* ドラムロール画面 */
+    .drumroll-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 0;
+      height: 220px;
+    }
+
+    .drum-icon {
+      font-size: 3.5rem;
+      animation: drumBounce 0.15s infinite alternate;
+      margin-bottom: 15px;
+    }
+
+    @keyframes drumBounce {
+      0% { transform: scale(1) rotate(-5deg); }
+      100% { transform: scale(1.1) rotate(5deg); }
+    }
+
+    .drum-text {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--secondary);
+      letter-spacing: 3px;
+      animation: pulseText 0.3s infinite alternate;
+    }
+
+    @keyframes pulseText {
+      0% { opacity: 0.6; }
+      100% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* 紙飛行機ステージ */
+    .paper-plane-stage {
+      position: relative;
+      width: 100%;
+      min-height: 220px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .paper-plane {
+      position: absolute;
+      width: 55px;
+      height: 55px;
+      top: -100px;
+      right: -100px;
+      opacity: 0;
+      transform: rotate(-25deg);
+      filter: drop-shadow(0 0 10px var(--primary));
+    }
+
+    @keyframes flyIn {
+      0% { top: -120px; right: -120px; opacity: 0; transform: scale(0.4) rotate(-35deg); }
+      60% { top: 40%; right: 45%; opacity: 1; transform: scale(1.2) rotate(10deg); }
+      80% { top: 35%; right: 42%; transform: scale(1) rotate(0deg); }
+      100% { top: 35%; right: 42%; opacity: 0; transform: scale(2.5) rotate(0deg); }
+    }
+
+    .paper-plane.animating {
+      animation: flyIn 2.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .result-card-unfold {
+      opacity: 0;
+      transform: scale(0.2) rotateX(90deg);
+      transition: all 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+      width: 100%;
+    }
+
+    .result-card-unfold.show {
+      opacity: 1;
+      transform: scale(1) rotateX(0deg);
+    }
+
+    .result-number {
+      font-size: 4rem;
+      font-weight: 900;
+      color: var(--primary);
+      text-shadow: 0 0 25px rgba(164, 194, 244, 0.6);
+      margin: 5px 0;
+    }
+
+    /* (≧∇≦)/ 歓喜エフェクト表示 */
+    .joy-illustration {
+      font-size: 3.5rem;
+      font-weight: bold;
+      color: #ff85a1;
+      text-shadow: 0 0 20px #ff85a1, 0 0 40px #a4c2f4;
+      margin: 15px 0;
+      animation: bounceJoy 0.6s infinite alternate;
+    }
+
+    @keyframes bounceJoy {
+      0% { transform: scale(0.95) translateY(0); }
+      100% { transform: scale(1.15) translateY(-10px); }
+    }
+
+    /* 間違い時の全画面動画オーバーレイ */
+    .fullscreen-video-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000;
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .fullscreen-video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .close-video-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid #fff;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 480px) {
+      body { padding: 10px; }
+      .main-panel { padding: 15px 12px 10px 12px; }
+      .character-avatar { width: 60px; height: 60px; }
+      .card-grid { grid-template-columns: repeat(auto-fill, minmax(32px, 1fr)); gap: 4px; }
+      .card-num { font-size: 0.75rem; padding: 3px 0; }
+      .btn { padding: 10px 18px; font-size: 0.85rem; }
+      .result-number { font-size: 3.2rem; }
+      .joy-illustration { font-size: 2.8rem; }
+      .main-title { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-layout">
+
+  <!-- タイトル -->
+  <div class="app-header">
+    <div class="main-title">数心解読</div>
+    <div class="sub-title">― Mind Reader ―</div>
+  </div>
+  
+  <div class="main-panel">
+    
+    <!-- キャラクター＋会話ウィンドウエリア -->
+    <div class="talk-container">
+      <img src="ruku.jpg" alt="ruku" class="character-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2275%22 height=%2275%22><rect width=%22100%23%22 height=%22100%23%22 fill=%22%23161b26%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23a4c2f4%22 font-size=%2212%22>ruku.jpg</text></svg>'">
+      <div class="dialogue-box">
+        <div class="dialogue-text" id="dialogue-text"><span class="cursor"></span></div>
+      </div>
+    </div>
+
+    <!-- スタート画面 -->
+    <div id="start-screen">
+      <div style="margin-top: 10px;">
+        <button class="btn" id="start-btn" onclick="startGame()" style="display: none;">診断を始める</button>
+      </div>
+    </div>
+
+    <!-- ゲーム画面 -->
+    <div id="game-screen" class="hidden">
+      <div class="binary-status" id="binary-pattern">LOGIC PATTERN: _ _ _ _ _ _ _</div>
+
+      <div class="flip-container">
+        <div class="flip-card" id="flip-card">
+          <div class="flip-face flip-front">
+            <div class="card-grid" id="grid-front"></div>
+          </div>
+          <div class="flip-face flip-back">
+            <div class="card-grid" id="grid-back"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-group" id="choice-buttons" style="display: none;">
+        <button class="btn" id="btn-yes" onclick="answer(true)">ある [YES]</button>
+        <button class="btn btn-no" id="btn-no" onclick="answer(false)">ない [NO]</button>
+      </div>
+    </div>
+
+    <!-- 診断中画面 -->
+    <div id="analyzing-screen" class="hidden">
+      <div class="analyzing-box">
+        <div class="spinner"></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ドラムロール画面 -->
+    <div id="drumroll-screen" class="hidden">
+      <div class="drumroll-box">
+        <div class="drum-icon">🥁</div>
+        <div class="drum-text">ドロドロドロドロ……</div>
+      </div>
+    </div>
+
+    <!-- 結果画面 -->
+    <div id="result-screen" class="hidden">
+      <div class="paper-plane-stage">
+        <svg class="paper-plane" id="paper-plane" viewBox="0 0 24 24" fill="none" stroke="#a4c2f4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 2L11 13"></path>
+          <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+        </svg>
+
+        <div class="result-card-unfold" id="result-unfold">
+          <div id="result-number" class="result-number">0</div>
+          <p style="color: var(--primary); font-size: 0.8rem; letter-spacing: 2px; margin-bottom: 15px;" id="final-binary-text"></p>
+
+          <!-- 当たり・外れ確認ボタンエリア -->
+          <div id="confirm-buttons" class="btn-group" style="display: none; margin-top: 15px;">
+            <button class="btn" onclick="handleVerifyResult(true)">あっていた！</button>
+            <button class="btn btn-no" onclick="handleVerifyResult(false)">違っていた…</button>
+          </div>
+
+          <!-- 正解時の(≧∇≦)/表示エリア -->
+          <div id="joy-section" class="hidden">
+            <div class="joy-illustration">(≧∇≦)/</div>
+            <button class="btn" onclick="resetGame()" style="margin-top: 10px;">もう一度遊ぶ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 間違い時の全画面動画プレイヤー -->
+<div id="fullscreen-video-overlay" class="fullscreen-video-container hidden">
+  <button class="close-video-btn" onclick="closeFullscreenVideo()">✕ 閉じる</button>
+  <video id="wrong-video" controls playsinline>
+    <source src="ssstik.io_1786707410579.mp4" type="video/mp4">
+    お使いのブラウザは動画再生に対応していません。
+  </video>
+</div>
+
+<script>
+  const BITS = [1, 2, 4, 8, 16, 32, 64];
+  
+  let currentStep = 0;
+  let remainingCandidates = [];
+  let binaryResult = [];
+  let isFlipped = false;
+  let isTypingActive = false;
+
+  // Web Audio APIでドラムロール音を生成する関数
+  function playDrumrollSound() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const duration = 2.2;
+      const startTime = audioCtx.currentTime;
+
+      for (let t = 0; t < duration; t += 0.06) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(120 + (t / duration) * 80, startTime + t);
+
+        gain.gain.setValueAtTime(0.15, startTime + t);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + t + 0.05);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start(startTime + t);
+        osc.stop(startTime + t + 0.05);
+      }
+
+      setTimeout(() => {
+        const cymbalOsc = audioCtx.createOscillator();
+        const cymbalGain = audioCtx.createGain();
+        cymbalOsc.type = 'sawtooth';
+        cymbalOsc.frequency.setValueAtTime(400, audioCtx.currentTime);
+        cymbalGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        cymbalGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.8);
+        cymbalOsc.connect(cymbalGain);
+        cymbalGain.connect(audioCtx.destination);
+        cymbalOsc.start();
+        cymbalOsc.stop(audioCtx.currentTime + 0.8);
+      }, duration * 1000);
+
+    } catch (e) {
+      console.log("AudioContext not supported or blocked");
+    }
+  }
+
+  // ローマ字と漢字の「1文字ペア」マッピングに対応したタイピング演出
+  function typeCharByChar(mapping, textElem, onComplete) {
+    let index = 0;
+    isTypingActive = true;
+
+    function renderText(currentRomajiStr) {
+      let romajiSoFar = currentRomajiStr;
+      let kanjiSoFar = mapping.slice(0, index).map(m => m.k).join('');
+      let currentHTML = kanjiSoFar + romajiSoFar;
+      textElem.innerHTML = currentHTML.replace(/\n/g, '<br>') + '<span class="cursor"></span>';
+    }
+
+    function processNextChar() {
+      if (index >= mapping.length) {
+        let finalKanji = mapping.map(m => m.k).join('');
+        textElem.innerHTML = finalKanji.replace(/\n/g, '<br>') + '<span class="cursor"></span>';
+        isTypingActive = false;
+        if (onComplete) onComplete();
+        return;
+      }
+
+      const item = mapping[index];
+      const romaji = item.r;
+      let rIdx = 0;
+
+      function typeRomaji() {
+        if (rIdx <= romaji.length) {
+          renderText(romaji.substring(0, rIdx));
+          rIdx++;
+          setTimeout(typeRomaji, 30);
+        } else {
+          index++;
+          setTimeout(processNextChar, 80);
+        }
+      }
+
+      typeRomaji();
+    }
+
+    processNextChar();
+  }
+
+  // 初期起動
+  window.onload = function() {
+    startGameProcess();
+  };
+
+  function startGameProcess() {
+    document.getElementById('start-screen').classList.remove('hidden');
+    document.getElementById('game-screen').classList.add('hidden');
+    document.getElementById('analyzing-screen').classList.add('hidden');
+    document.getElementById('drumroll-screen').classList.add('hidden');
+    document.getElementById('result-screen').classList.add('hidden');
+    document.getElementById('fullscreen-video-overlay').classList.add('hidden');
+    document.getElementById('start-btn').style.display = 'none';
+
+    const msgData = [
+      {r:"1", k:"1"}, {r:"kara", k:"から"}, {r:"100", k:"100"}, {r:"no", k:"の"}, {r:"naka", k:"中"}, {r:"kara", k:"から"}, {r:",", k:"、"},
+      {r:"suki", k:"好"}, {r:"na", k:"き"}, {r:"suuji", k:"数"}, {r:"wo", k:"字"}, {r:"1tsu", k:"1つ"}, {r:"omoi", k:"想"}, {r:"uka", k:"い浮"}, {r:"bete", k:"かべて"}, {r:"ne", k:"ね"}, {r:"!", k:"！"},
+      {r:"\n", k:"\n"},
+      {r:"boku", k:"僕"}, {r:"ga", k:"が"}, {r:"kimi", k:"君"}, {r:"no", k:"の"}, {r:"kokoro", k:"心"}, {r:"wo", k:"を"}, {r:"yom", k:"読"}, {r:"njau", k:"んじゃう"}, {r:"yo", k:"よ"}, {r:"~", k:"～"}, {r:"!", k:"！"}
+    ];
+
+    const textElem = document.getElementById('dialogue-text');
+    typeCharByChar(msgData, textElem, () => {
+      document.getElementById('start-btn').style.display = 'inline-block';
+    });
+  }
+
+  function startGame() {
+    currentStep = 0;
+    binaryResult = [];
+    isFlipped = false;
+    remainingCandidates = Array.from({length: 100}, (_, i) => i + 1);
+
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('game-screen').classList.remove('hidden');
+    document.getElementById('choice-buttons').style.display = 'none';
+
+    renderCardContent(document.getElementById('grid-front'), BITS[0]);
+    updateBinaryDisplay();
+
+    const qMsgData = [
+      {r:"kono", k:"この"}, {r:"naka", k:"なか"}, {r:"ni", k:"に"}, {r:",", k:"、"},
+      {r:"eran", k:"選"}, {r:"da", k:"んだ"}, {r:"suuji", k:"数"}, {r:"wa", k:"字"}, {r:"aru", k:"ある"}, {r:"kana", k:"かな"}, {r:"?", k:"？"}
+    ];
+
+    const textElem = document.getElementById('dialogue-text');
+    typeCharByChar(qMsgData, textElem, () => {
+      document.getElementById('choice-buttons').style.display = 'flex';
+    });
+  }
+
+  function renderCardContent(targetGrid, bitVal) {
+    targetGrid.innerHTML = '';
+    for (let i = 1; i <= 100; i++) {
+      if ((i & bitVal) !== 0) {
+        const item = document.createElement('div');
+        item.className = 'card-num';
+        item.textContent = i;
+        targetGrid.appendChild(item);
+      }
+    }
+  }
+
+  function updateBinaryDisplay() {
+    let displayBits = Array(BITS.length).fill('_');
+    for (let i = 0; i < binaryResult.length; i++) {
+      displayBits[BITS.length - 1 - i] = binaryResult[i];
+    }
+    document.getElementById('binary-pattern').textContent = `LOGIC PATTERN: ${displayBits.join(' ')}`;
+  }
+
+  function answer(isYes) {
+    if (isTypingActive) return;
+    setButtonsDisabled(true);
+
+    const bitVal = BITS[currentStep];
+    binaryResult.push(isYes ? '1' : '0');
+
+    remainingCandidates = remainingCandidates.filter(num => {
+      const hasBit = (num & bitVal) !== 0;
+      return isYes ? hasBit : !hasBit;
+    });
+
+    updateBinaryDisplay();
+    currentStep++;
+
+    if (currentStep < BITS.length && remainingCandidates.length > 1) {
+      const nextBit = BITS[currentStep];
+      const card = document.getElementById('flip-card');
+
+      if (!isFlipped) {
+        renderCardContent(document.getElementById('grid-back'), nextBit);
+        card.classList.add('flipped');
+        isFlipped = true;
+      } else {
+        renderCardContent(document.getElementById('grid-front'), nextBit);
+        card.classList.remove('flipped');
+        isFlipped = false;
+      }
+
+      const qMsgData = [
+        {r:"kono", k:"この"}, {r:"naka", k:"なか"}, {r:"ni", k:"に"}, {r:",", k:"、"},
+        {r:"eran", k:"選"}, {r:"da", k:"んだ"}, {r:"suuji", k:"数"}, {r:"wa", k:"字"}, {r:"aru", k:"ある"}, {r:"kana", k:"かな"}, {r:"?", k:"？"}
+      ];
+
+      const textElem = document.getElementById('dialogue-text');
+      typeCharByChar(qMsgData, textElem, () => {
+        setTimeout(() => {
+          setButtonsDisabled(false);
+        }, 300);
+      });
+
+    } else {
+      setTimeout(startAnalyzingSequence, 600);
+    }
+  }
+
+  function setButtonsDisabled(disabled) {
+    document.getElementById('btn-yes').disabled = disabled;
+    document.getElementById('btn-no').disabled = disabled;
+  }
+
+  function startAnalyzingSequence() {
+    document.getElementById('game-screen').classList.add('hidden');
+    const analyzingScreen = document.getElementById('analyzing-screen');
+    analyzingScreen.classList.remove('hidden');
+
+    const anaMsgData = [
+      {r:"kimi", k:"キミ"}, {r:"no", k:"の"}, {r:"kokoro", k:"心"}, {r:"wo", k:"を"}, {r:"jikku", k:"じっく"}, {r:"ri", k:"り"},
+      {r:"yomi", k:"読"}, {r:"chuu", k:"み中"}, {r:"da", k:"だ"}, {r:"yo", k:"よ"}, {r:"!", k:"っ！"}
+    ];
+
+    const textElem = document.getElementById('dialogue-text');
+    typeCharByChar(anaMsgData, textElem);
+
+    const fill = document.getElementById('progress-fill');
+    fill.style.width = '0%';
+    setTimeout(() => {
+      fill.style.width = '100%';
+    }, 100);
+
+    setTimeout(() => {
+      analyzingScreen.classList.add('hidden');
+      startDrumrollSequence();
+    }, 2600);
+  }
+
+  function startDrumrollSequence() {
+    const drumrollScreen = document.getElementById('drumroll-screen');
+    drumrollScreen.classList.remove('hidden');
+
+    const drumMsgData = [
+      {r:"iyoi", k:"いよ"}, {r:"yo", k:"いよ"}, {r:"kekka", k:"結"}, {r:"happ", k:"果発"}, {r:"you", k:"表"}, {r:"da", k:"だ"}, {r:"yo", k:"よ"}, {r:"...", k:"……"}, {r:"!", k:"！"}
+    ];
+
+    const textElem = document.getElementById('dialogue-text');
+    typeCharByChar(drumMsgData, textElem);
+    playDrumrollSound();
+
+    setTimeout(() => {
+      drumrollScreen.classList.add('hidden');
+      showPaperPlaneResult();
+    }, 2500);
+  }
+
+  function showPaperPlaneResult() {
+    const resultScreen = document.getElementById('result-screen');
+    resultScreen.classList.remove('hidden');
+    document.getElementById('confirm-buttons').style.display = 'none';
+    document.getElementById('joy-section').classList.add('hidden');
+
+    const finalNum = remainingCandidates.length > 0 ? remainingCandidates[0] : 0;
+    const finalBinaryStr = binaryResult.slice().reverse().join('');
+    
+    document.getElementById('result-number').textContent = finalNum > 0 ? finalNum : "範囲外";
+    document.getElementById('final-binary-text').textContent = `PATTERN: ${finalBinaryStr}_2`;
+
+    const plane = document.getElementById('paper-plane');
+    const unfold = document.getElementById('result-unfold');
+
+    plane.classList.remove('animating');
+    unfold.classList.remove('show');
+    
+    void plane.offsetWidth;
+    plane.classList.add('animating');
+
+    setTimeout(() => {
+      unfold.classList.add('show');
+      const resMsgData = [
+        {r:"attekana", k:"当たってたかな"}, {r:"?", k:"？"}
+      ];
+
+      const textElem = document.getElementById('dialogue-text');
+      typeCharByChar(resMsgData, textElem, () => {
+        document.getElementById('confirm-buttons').style.display = 'flex';
+      });
+    }, 2000);
+  }
+
+  // 「あっていた！」か「違っていた…」かの判定ボタン処理
+  function handleVerifyResult(isCorrect) {
+    document.getElementById('confirm-buttons').style.display = 'none';
+
+    if (isCorrect) {
+      // あっていた場合：(≧∇≦)/ を表示
+      document.getElementById('joy-section').classList.remove('hidden');
+      const joyMsgData = [
+        {r:"yatta", k:"やった"}, {r:"-", k:"ー"}, {r:"!", k:"！"},
+        {r:"daitai", k:"大成"}, {r:"kou", k:"功"}, {r:"da", k:"だ"}, {r:"yo", k:"よ"}, {r:"!", k:"！"}
+      ];
+      const textElem = document.getElementById('dialogue-text');
+      typeCharByChar(joyMsgData, textElem);
+    } else {
+      // 違っていた場合：全画面で動画再生
+      const overlay = document.getElementById('fullscreen-video-overlay');
+      const video = document.getElementById('wrong-video');
+      
+      overlay.classList.remove('hidden');
+      video.currentTime = 0;
+      video.play().catch(e => console.log("Video play error:", e));
+
+      const wrongMsgData = [
+        {r:"are", k:"あれ"}, {r:"...", k:"……"},
+        {r:"chiga", k:"違"}, {r:"tta", k:"っ"}, {r:"mitai", k:"みたい"}, {r:"da", k:"だ"}, {r:"ne", k:"ね"}
+      ];
+      const textElem = document.getElementById('dialogue-text');
+      typeCharByChar(wrongMsgData, textElem);
+    }
+  }
+
+  function closeFullscreenVideo() {
+    const overlay = document.getElementById('fullscreen-video-overlay');
+    const video = document.getElementById('wrong-video');
+    video.pause();
+    overlay.classList.add('hidden');
+    
+    // 動画を閉じたら「もう一度遊ぶ」選択を出せるようにする
+    document.getElementById('joy-section').classList.remove('hidden');
+  }
+
+  function resetGame() {
+    startGameProcess();
+  }
+</script>
+
+</body>
+</html>
