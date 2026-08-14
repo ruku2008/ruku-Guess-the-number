@@ -553,7 +553,8 @@
           <!-- 正解時の(≧∇≦)/表示エリア -->
           <div id="joy-section" class="hidden">
             <div class="joy-illustration">(≧∇≦)/</div>
-            <button class="btn" onclick="resetGame()" style="margin-top: 10px;">もう一度遊ぶ</button>
+            <!-- 自動再読み込みボタンに変更 -->
+            <button class="btn" onclick="reloadGame()" style="margin-top: 10px;">もう一度遊ぶ</button>
           </div>
         </div>
       </div>
@@ -580,21 +581,26 @@
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    
+    // リサイズ時に drops 配列も更新
+    columns = Math.floor(canvas.width / fontSize);
+    drops = Array(columns).fill(1);
   }
-  resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
-
+  
   const characters = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ';
   const fontSize = 14;
-  let columns = Math.floor(canvas.width / fontSize);
-  let drops = Array(columns).fill(1);
+  let columns = 0;
+  let drops = [];
+  
+  resizeCanvas(); // 初期実行
+  window.addEventListener('resize', resizeCanvas);
 
   function drawCyberBg() {
     // 半透明の黒でリフレッシュして文字に尾を引く効果を与える
     ctx.fillStyle = 'rgba(13, 15, 23, 0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#a4c2f4'; // テーマカラーの青で描画（少し緑やピンクを混ぜる事も可）
+    ctx.fillStyle = '#a4c2f4'; // テーマカラーの青で描画
     ctx.font = fontSize + 'px monospace';
 
     for (let i = 0; i < drops.length; i++) {
@@ -628,6 +634,7 @@
   let isFlipped = false;
   let isTypingActive = false;
 
+  // Web Audio APIでドラムロール音を生成する関数
   function playDrumrollSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -669,6 +676,7 @@
     }
   }
 
+  // ローマ字と漢字の「1文字ペア」マッピングに対応したタイピング演出
   function typeCharByChar(mapping, textElem, onComplete) {
     let index = 0;
     isTypingActive = true;
@@ -710,6 +718,7 @@
     processNextChar();
   }
 
+  // 初期起動
   window.onload = function() {
     startGameProcess();
   };
@@ -908,10 +917,12 @@
     }, 2000);
   }
 
+  // 「あっていた！」か「違っていた…」かの判定ボタン処理
   function handleVerifyResult(isCorrect) {
     document.getElementById('confirm-buttons').style.display = 'none';
 
     if (isCorrect) {
+      // あっていた場合：(≧∇≦)/ を表示
       document.getElementById('joy-section').classList.remove('hidden');
       const joyMsgData = [
         {r:"yatta", k:"やった"}, {r:"-", k:"ー"}, {r:"!", k:"！"},
@@ -920,6 +931,7 @@
       const textElem = document.getElementById('dialogue-text');
       typeCharByChar(joyMsgData, textElem);
     } else {
+      // 違っていた場合：全画面で動画再生
       const overlay = document.getElementById('fullscreen-video-overlay');
       const video = document.getElementById('wrong-video');
       
@@ -942,11 +954,13 @@
     video.pause();
     overlay.classList.add('hidden');
     
+    // 動画を閉じたらリロードボタンを表示
     document.getElementById('joy-section').classList.remove('hidden');
   }
 
-  function resetGame() {
-    startGameProcess();
+  // ページを自動再読み込みする関数
+  function reloadGame() {
+    location.reload();
   }
 </script>
 
