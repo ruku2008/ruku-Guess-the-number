@@ -4,6 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数心解読 - Mind Reader -</title>
+  
+  <!-- --- 手順1: Google FontsからYomogiフォントを読み込むタグを追加 --- -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
+  <!-- ------------------------------------------------------------- -->
+
   <style>
     :root {
       --bg-color: #0d0f17;
@@ -19,6 +26,7 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      /* 全体的なフォントは monospace（または 'Segoe UI' など） */
       font-family: 'Consolas', 'Courier New', monospace, 'Segoe UI', serif;
     }
 
@@ -134,7 +142,7 @@
       50% { transform: translateY(-4px); }
     }
 
-    /* メッセージウィンドウ */
+    /* メッセージウィンドウ（2段固定表示エリア） */
     .dialogue-box {
       flex-grow: 1;
       display: flex;
@@ -143,12 +151,15 @@
       min-height: 64px;
     }
 
+    /* --- 手順2: 喋っている言葉（メッセージ）にYomogiフォントを適用 --- */
     .dialogue-text {
-      font-size: 0.9rem;
+      font-family: 'Yomogi', cursive; /* ここにYomogiフォントを指定 */
+      font-size: 1.1rem; /* フォントに合わせてサイズを微調整（ monospaceより少し大きく ） */
       color: #fff;
-      line-height: 1.5;
+      line-height: 1.6; /* 行間も微調整 */
       word-break: break-all;
     }
+    /* ------------------------------------------------------------- */
 
     .cursor {
       display: inline-block;
@@ -401,6 +412,7 @@
       margin: 5px 0;
     }
 
+    /* (≧∇≦)/ 歓喜エフェクト表示 */
     .joy-illustration {
       font-size: 3.5rem;
       font-weight: bold;
@@ -553,7 +565,7 @@
           <!-- 正解時の(≧∇≦)/表示エリア -->
           <div id="joy-section" class="hidden">
             <div class="joy-illustration">(≧∇≦)/</div>
-            <!-- 自動再読み込みボタンに変更 -->
+            <!-- 自動再読み込みボタン -->
             <button class="btn" onclick="reloadGame()" style="margin-top: 10px;">もう一度遊ぶ</button>
           </div>
         </div>
@@ -732,6 +744,7 @@
     document.getElementById('fullscreen-video-overlay').classList.add('hidden');
     document.getElementById('start-btn').style.display = 'none';
 
+    // メッセージデータを定義
     const msgData = [
       {r:"1", k:"1"}, {r:"kara", k:"から"}, {r:"100", k:"100"}, {r:"no", k:"の"}, {r:"naka", k:"中"}, {r:"kara", k:"から"}, {r:",", k:"、"},
       {r:"suki", k:"好"}, {r:"na", k:"きな"}, {r:"suuji", k:"数"}, {r:"wo", k:"字"}, {r:"1tsu", k:"1つ"}, {r:"omoi", k:"想"}, {r:"uka", k:"い浮"}, {r:"bete", k:"かべて"}, {r:"ne", k:"ね"}, {r:"!", k:"！"},
