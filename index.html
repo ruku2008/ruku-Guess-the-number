@@ -7,7 +7,7 @@
   <style>
     :root {
       --bg-color: #0d0f17;
-      --panel-bg: #161b26;
+      --panel-bg: rgba(22, 27, 38, 0.85); /* サイバー背景が見えるよう透明度を調整 */
       --primary: #a4c2f4;
       --secondary: #ff85a1;
       --accent: #b5838d;
@@ -31,11 +31,18 @@
       align-items: center;
       padding: 15px;
       overflow-x: hidden;
-      background-image: 
-        radial-gradient(circle at 50% 50%, rgba(181, 131, 141, 0.1) 0%, transparent 80%),
-        linear-gradient(rgba(164, 194, 244, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(164, 194, 244, 0.03) 1px, transparent 1px);
-      background-size: 100% 100%, 30px 30px, 30px 30px;
+      position: relative;
+    }
+
+    /* サイバー文字が流れるCanvasの背景設定 */
+    #cyber-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
     }
 
     .app-layout {
@@ -71,8 +78,9 @@
 
     .main-panel {
       background: var(--panel-bg);
+      backdrop-filter: blur(8px); /* サイバー感を高める背景ブラー */
       border: 1px solid var(--primary);
-      box-shadow: 0 0 20px rgba(164, 194, 244, 0.2);
+      box-shadow: 0 0 25px rgba(164, 194, 244, 0.25);
       border-radius: 12px;
       padding: 25px 20px 15px 20px;
       text-align: center;
@@ -102,7 +110,7 @@
       display: flex;
       align-items: center;
       gap: 15px;
-      background: rgba(13, 15, 23, 0.8);
+      background: rgba(13, 15, 23, 0.85);
       border: 1px solid rgba(164, 194, 244, 0.3);
       border-radius: 10px;
       padding: 12px;
@@ -126,7 +134,7 @@
       50% { transform: translateY(-4px); }
     }
 
-    /* メッセージウィンドウ（2段固定表示エリア） */
+    /* メッセージウィンドウ */
     .dialogue-box {
       flex-grow: 1;
       display: flex;
@@ -232,7 +240,7 @@
     }
 
     .btn {
-      background: transparent;
+      background: rgba(13, 15, 23, 0.6);
       border: 1px solid var(--primary);
       color: var(--primary);
       padding: 10px 24px;
@@ -393,7 +401,6 @@
       margin: 5px 0;
     }
 
-    /* (≧∇≦)/ 歓喜エフェクト表示 */
     .joy-illustration {
       font-size: 3.5rem;
       font-weight: bold;
@@ -457,6 +464,9 @@
   </style>
 </head>
 <body>
+
+<!-- サイバーコード背景用Canvas -->
+<canvas id="cyber-bg"></canvas>
 
 <div class="app-layout">
 
@@ -563,6 +573,53 @@
 </div>
 
 <script>
+  /* --- サイバー背景アニメーション (Matrix Rain) --- */
+  const canvas = document.getElementById('cyber-bg');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const characters = '0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ';
+  const fontSize = 14;
+  let columns = Math.floor(canvas.width / fontSize);
+  let drops = Array(columns).fill(1);
+
+  function drawCyberBg() {
+    // 半透明の黒でリフレッシュして文字に尾を引く効果を与える
+    ctx.fillStyle = 'rgba(13, 15, 23, 0.15)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#a4c2f4'; // テーマカラーの青で描画（少し緑やピンクを混ぜる事も可）
+    ctx.font = fontSize + 'px monospace';
+
+    for (let i = 0; i < drops.length; i++) {
+      const text = characters.charAt(Math.floor(Math.random() * characters.length));
+      
+      // 先頭文字を明るく光らせるアクセント
+      if (Math.random() > 0.85) {
+        ctx.fillStyle = '#ff85a1';
+      } else {
+        ctx.fillStyle = 'rgba(164, 194, 244, 0.6)';
+      }
+
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+        drops[i] = 0;
+      }
+      drops[i]++;
+    }
+  }
+
+  setInterval(drawCyberBg, 33);
+
+
+  /* --- メインロジック --- */
   const BITS = [1, 2, 4, 8, 16, 32, 64];
   
   let currentStep = 0;
@@ -571,7 +628,6 @@
   let isFlipped = false;
   let isTypingActive = false;
 
-  // Web Audio APIでドラムロール音を生成する関数
   function playDrumrollSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -613,7 +669,6 @@
     }
   }
 
-  // ローマ字と漢字の「1文字ペア」マッピングに対応したタイピング演出
   function typeCharByChar(mapping, textElem, onComplete) {
     let index = 0;
     isTypingActive = true;
@@ -655,7 +710,6 @@
     processNextChar();
   }
 
-  // 初期起動
   window.onload = function() {
     startGameProcess();
   };
@@ -671,7 +725,7 @@
 
     const msgData = [
       {r:"1", k:"1"}, {r:"kara", k:"から"}, {r:"100", k:"100"}, {r:"no", k:"の"}, {r:"naka", k:"中"}, {r:"kara", k:"から"}, {r:",", k:"、"},
-      {r:"suki", k:"好"}, {r:"na", k:"き"}, {r:"suuji", k:"数"}, {r:"wo", k:"字"}, {r:"1tsu", k:"1つ"}, {r:"omoi", k:"想"}, {r:"uka", k:"い浮"}, {r:"bete", k:"かべて"}, {r:"ne", k:"ね"}, {r:"!", k:"！"},
+      {r:"suki", k:"好"}, {r:"na", k:"きな"}, {r:"suuji", k:"数"}, {r:"wo", k:"字"}, {r:"1tsu", k:"1つ"}, {r:"omoi", k:"想"}, {r:"uka", k:"い浮"}, {r:"bete", k:"かべて"}, {r:"ne", k:"ね"}, {r:"!", k:"！"},
       {r:"\n", k:"\n"},
       {r:"boku", k:"僕"}, {r:"ga", k:"が"}, {r:"kimi", k:"君"}, {r:"no", k:"の"}, {r:"kokoro", k:"心"}, {r:"wo", k:"を"}, {r:"yom", k:"読"}, {r:"njau", k:"んじゃう"}, {r:"yo", k:"よ"}, {r:"~", k:"～"}, {r:"!", k:"！"}
     ];
@@ -854,12 +908,10 @@
     }, 2000);
   }
 
-  // 「あっていた！」か「違っていた…」かの判定ボタン処理
   function handleVerifyResult(isCorrect) {
     document.getElementById('confirm-buttons').style.display = 'none';
 
     if (isCorrect) {
-      // あっていた場合：(≧∇≦)/ を表示
       document.getElementById('joy-section').classList.remove('hidden');
       const joyMsgData = [
         {r:"yatta", k:"やった"}, {r:"-", k:"ー"}, {r:"!", k:"！"},
@@ -868,7 +920,6 @@
       const textElem = document.getElementById('dialogue-text');
       typeCharByChar(joyMsgData, textElem);
     } else {
-      // 違っていた場合：全画面で動画再生
       const overlay = document.getElementById('fullscreen-video-overlay');
       const video = document.getElementById('wrong-video');
       
@@ -891,7 +942,6 @@
     video.pause();
     overlay.classList.add('hidden');
     
-    // 動画を閉じたら「もう一度遊ぶ」選択を出せるようにする
     document.getElementById('joy-section').classList.remove('hidden');
   }
 
