@@ -562,7 +562,7 @@
 <div id="fullscreen-video-overlay" class="fullscreen-video-container hidden">
   <button class="close-video-btn" onclick="closeFullscreenVideo()">✕ 閉じる</button>
   <video id="game-video" controls playsinline>
-    <source id="video-source" src="" type="video/mp4">
+    <!-- <source>タグはJavaScriptで直接video.srcを書き換えるため削除しました -->
     お使いのブラウザは動画再生に対応していません。
   </video>
 </div>
@@ -909,11 +909,11 @@
 
     const overlay = document.getElementById('fullscreen-video-overlay');
     const video = document.getElementById('game-video');
-    const videoSource = document.getElementById('video-source');
+    // videoSourceに関する記述は不要なため削除
 
     if (isCorrect) {
       // 成功時：ssstik.io_1786709.mp4 を再生
-      videoSource.src = "ssstik.io_1786709.mp4";
+      video.src = "ssstik.io_1786709.mp4";
       
       const joyMsgData = [
         {r:"yatta", k:"やった"}, {r:"-", k:"ー"}, {r:"!", k:"！"},
@@ -923,7 +923,7 @@
       typeCharByChar(joyMsgData, textElem);
     } else {
       // 失敗時：ssstik.io_1786707410579.mp4 を再生
-      videoSource.src = "ssstik.io_1786707410579.mp4";
+      video.src = "ssstik.io_1786707410579.mp4";
 
       const wrongMsgData = [
         {r:"are", k:"あれ"}, {r:"...", k:"……"},
