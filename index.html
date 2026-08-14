@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数心解読 - Mind Reader -</title>
   
-  <!-- --- 手順1: Google FontsからYomogiフォントを読み込むタグを追加 --- -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
-  <!-- ------------------------------------------------------------- -->
 
   <style>
     :root {
       --bg-color: #0d0f17;
-      --panel-bg: rgba(22, 27, 38, 0.85); /* サイバー背景が見えるよう透明度を調整 */
+      --panel-bg: rgba(22, 27, 38, 0.85);
       --primary: #a4c2f4;
       --secondary: #ff85a1;
       --accent: #b5838d;
@@ -26,7 +24,6 @@
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      /* 全体的なフォントは monospace（または 'Segoe UI' など） */
       font-family: 'Consolas', 'Courier New', monospace, 'Segoe UI', serif;
     }
 
@@ -42,7 +39,6 @@
       position: relative;
     }
 
-    /* サイバー文字が流れるCanvasの背景設定 */
     #cyber-bg {
       position: fixed;
       top: 0;
@@ -60,7 +56,6 @@
       z-index: 10;
     }
 
-    /* タイトル表示 */
     .app-header {
       text-align: center;
       margin-bottom: 15px;
@@ -86,7 +81,7 @@
 
     .main-panel {
       background: var(--panel-bg);
-      backdrop-filter: blur(8px); /* サイバー感を高める背景ブラー */
+      backdrop-filter: blur(8px);
       border: 1px solid var(--primary);
       box-shadow: 0 0 25px rgba(164, 194, 244, 0.25);
       border-radius: 12px;
@@ -113,7 +108,6 @@
       100% { transform: translateX(100%); }
     }
 
-    /* キャラクターと会話ウィンドウエリア */
     .talk-container {
       display: flex;
       align-items: center;
@@ -142,7 +136,6 @@
       50% { transform: translateY(-4px); }
     }
 
-    /* メッセージウィンドウ（2段固定表示エリア） */
     .dialogue-box {
       flex-grow: 1;
       display: flex;
@@ -151,15 +144,13 @@
       min-height: 64px;
     }
 
-    /* --- 手順2: 喋っている言葉（メッセージ）にYomogiフォントを適用 --- */
     .dialogue-text {
-      font-family: 'Yomogi', cursive; /* ここにYomogiフォントを指定 */
-      font-size: 1.1rem; /* フォントに合わせてサイズを微調整（ monospaceより少し大きく ） */
+      font-family: 'Yomogi', cursive;
+      font-size: 1.1rem;
       color: #fff;
-      line-height: 1.6; /* 行間も微調整 */
+      line-height: 1.6;
       word-break: break-all;
     }
-    /* ------------------------------------------------------------- */
 
     .cursor {
       display: inline-block;
@@ -176,7 +167,6 @@
       51%, 100% { opacity: 0; }
     }
 
-    /* 3D フリップカード */
     .flip-container {
       perspective: 1000px;
       margin-bottom: 15px;
@@ -284,7 +274,6 @@
       box-shadow: 0 0 12px var(--secondary);
     }
 
-    /* 診断中画面 */
     .analyzing-box {
       display: flex;
       flex-direction: column;
@@ -325,7 +314,6 @@
       transition: width 2.5s ease-in-out;
     }
 
-    /* ドラムロール画面 */
     .drumroll-box {
       display: flex;
       flex-direction: column;
@@ -359,7 +347,6 @@
       100% { opacity: 1; transform: scale(1.05); }
     }
 
-    /* 紙飛行機ステージ */
     .paper-plane-stage {
       position: relative;
       width: 100%;
@@ -412,7 +399,6 @@
       margin: 5px 0;
     }
 
-    /* (≧∇≦)/ 歓喜エフェクト表示 */
     .joy-illustration {
       font-size: 3.5rem;
       font-weight: bold;
@@ -427,7 +413,7 @@
       100% { transform: scale(1.15) translateY(-10px); }
     }
 
-    /* 間違い時の全画面動画オーバーレイ */
+    /* 全画面動画オーバーレイ */
     .fullscreen-video-container {
       position: fixed;
       top: 0;
@@ -477,12 +463,10 @@
 </head>
 <body>
 
-<!-- サイバーコード背景用Canvas -->
 <canvas id="cyber-bg"></canvas>
 
 <div class="app-layout">
 
-  <!-- タイトル -->
   <div class="app-header">
     <div class="main-title">数心解読</div>
     <div class="sub-title">― Mind Reader ―</div>
@@ -490,7 +474,6 @@
   
   <div class="main-panel">
     
-    <!-- キャラクター＋会話ウィンドウエリア -->
     <div class="talk-container">
       <img src="ruku.jpg" alt="ruku" class="character-avatar" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2275%22 height=%2275%22><rect width=%22100%23%22 height=%22100%23%22 fill=%22%23161b26%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22middle%22 text-anchor=%22middle%22 fill=%22%23a4c2f4%22 font-size=%2212%22>ruku.jpg</text></svg>'">
       <div class="dialogue-box">
@@ -562,10 +545,9 @@
             <button class="btn btn-no" onclick="handleVerifyResult(false)">違っていた…</button>
           </div>
 
-          <!-- 正解時の(≧∇≦)/表示エリア -->
+          <!-- 結果後の操作エリア -->
           <div id="joy-section" class="hidden">
             <div class="joy-illustration">(≧∇≦)/</div>
-            <!-- 自動再読み込みボタン -->
             <button class="btn" onclick="reloadGame()" style="margin-top: 10px;">もう一度遊ぶ</button>
           </div>
         </div>
@@ -576,25 +558,23 @@
 
 </div>
 
-<!-- 間違い時の全画面動画プレイヤー -->
+<!-- 全画面動画プレイヤー（共通） -->
 <div id="fullscreen-video-overlay" class="fullscreen-video-container hidden">
   <button class="close-video-btn" onclick="closeFullscreenVideo()">✕ 閉じる</button>
-  <video id="wrong-video" controls playsinline>
-    <source src="ssstik.io_1786707410579.mp4" type="video/mp4">
+  <video id="game-video" controls playsinline>
+    <source id="video-source" src="" type="video/mp4">
     お使いのブラウザは動画再生に対応していません。
   </video>
 </div>
 
 <script>
-  /* --- サイバー背景アニメーション (Matrix Rain) --- */
+  /* --- サイバー背景アニメーション --- */
   const canvas = document.getElementById('cyber-bg');
   const ctx = canvas.getContext('2d');
 
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    
-    // リサイズ時に drops 配列も更新
     columns = Math.floor(canvas.width / fontSize);
     drops = Array(columns).fill(1);
   }
@@ -604,21 +584,19 @@
   let columns = 0;
   let drops = [];
   
-  resizeCanvas(); // 初期実行
+  resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
   function drawCyberBg() {
-    // 半透明の黒でリフレッシュして文字に尾を引く効果を与える
     ctx.fillStyle = 'rgba(13, 15, 23, 0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#a4c2f4'; // テーマカラーの青で描画
+    ctx.fillStyle = '#a4c2f4';
     ctx.font = fontSize + 'px monospace';
 
     for (let i = 0; i < drops.length; i++) {
       const text = characters.charAt(Math.floor(Math.random() * characters.length));
       
-      // 先頭文字を明るく光らせるアクセント
       if (Math.random() > 0.85) {
         ctx.fillStyle = '#ff85a1';
       } else {
@@ -636,7 +614,6 @@
 
   setInterval(drawCyberBg, 33);
 
-
   /* --- メインロジック --- */
   const BITS = [1, 2, 4, 8, 16, 32, 64];
   
@@ -646,7 +623,6 @@
   let isFlipped = false;
   let isTypingActive = false;
 
-  // Web Audio APIでドラムロール音を生成する関数
   function playDrumrollSound() {
     try {
       const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -688,7 +664,6 @@
     }
   }
 
-  // ローマ字と漢字の「1文字ペア」マッピングに対応したタイピング演出
   function typeCharByChar(mapping, textElem, onComplete) {
     let index = 0;
     isTypingActive = true;
@@ -730,7 +705,6 @@
     processNextChar();
   }
 
-  // 初期起動
   window.onload = function() {
     startGameProcess();
   };
@@ -744,7 +718,6 @@
     document.getElementById('fullscreen-video-overlay').classList.add('hidden');
     document.getElementById('start-btn').style.display = 'none';
 
-    // メッセージデータを定義
     const msgData = [
       {r:"1", k:"1"}, {r:"kara", k:"から"}, {r:"100", k:"100"}, {r:"no", k:"の"}, {r:"naka", k:"中"}, {r:"kara", k:"から"}, {r:",", k:"、"},
       {r:"suki", k:"好"}, {r:"na", k:"きな"}, {r:"suuji", k:"数"}, {r:"wo", k:"字"}, {r:"1tsu", k:"1つ"}, {r:"omoi", k:"想"}, {r:"uka", k:"い浮"}, {r:"bete", k:"かべて"}, {r:"ne", k:"ね"}, {r:"!", k:"！"},
@@ -930,13 +903,18 @@
     }, 2000);
   }
 
-  // 「あっていた！」か「違っていた…」かの判定ボタン処理
+  /* --- 当たり・外れの動画再生処理 --- */
   function handleVerifyResult(isCorrect) {
     document.getElementById('confirm-buttons').style.display = 'none';
 
+    const overlay = document.getElementById('fullscreen-video-overlay');
+    const video = document.getElementById('game-video');
+    const videoSource = document.getElementById('video-source');
+
     if (isCorrect) {
-      // あっていた場合：(≧∇≦)/ を表示
-      document.getElementById('joy-section').classList.remove('hidden');
+      // 成功時：ssstik.io_1786709.mp4 を再生
+      videoSource.src = "ssstik.io_1786709.mp4";
+      
       const joyMsgData = [
         {r:"yatta", k:"やった"}, {r:"-", k:"ー"}, {r:"!", k:"！"},
         {r:"daitai", k:"大成"}, {r:"kou", k:"功"}, {r:"da", k:"だ"}, {r:"yo", k:"よ"}, {r:"!", k:"！"}
@@ -944,13 +922,8 @@
       const textElem = document.getElementById('dialogue-text');
       typeCharByChar(joyMsgData, textElem);
     } else {
-      // 違っていた場合：全画面で動画再生
-      const overlay = document.getElementById('fullscreen-video-overlay');
-      const video = document.getElementById('wrong-video');
-      
-      overlay.classList.remove('hidden');
-      video.currentTime = 0;
-      video.play().catch(e => console.log("Video play error:", e));
+      // 失敗時：ssstik.io_1786707410579.mp4 を再生
+      videoSource.src = "ssstik.io_1786707410579.mp4";
 
       const wrongMsgData = [
         {r:"are", k:"あれ"}, {r:"...", k:"……"},
@@ -959,19 +932,24 @@
       const textElem = document.getElementById('dialogue-text');
       typeCharByChar(wrongMsgData, textElem);
     }
+
+    // 動画ソースをロードして全画面表示・再生
+    video.load();
+    overlay.classList.remove('hidden');
+    video.currentTime = 0;
+    video.play().catch(e => console.log("Video play error:", e));
   }
 
   function closeFullscreenVideo() {
     const overlay = document.getElementById('fullscreen-video-overlay');
-    const video = document.getElementById('wrong-video');
+    const video = document.getElementById('game-video');
     video.pause();
     overlay.classList.add('hidden');
     
-    // 動画を閉じたらリロードボタンを表示
+    // 動画を閉じたら「もう一度遊ぶ」エリアを表示
     document.getElementById('joy-section').classList.remove('hidden');
   }
 
-  // ページを自動再読み込みする関数
   function reloadGame() {
     location.reload();
   }
